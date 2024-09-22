@@ -1,7 +1,6 @@
 using MathNet.Numerics;
 using MathNet.Numerics.Integration;
 using System.Diagnostics;
-using ДЗ1.DB;
 using ДЗ1.Models;
 
 namespace ДЗ1

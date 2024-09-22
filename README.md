@@ -1,0 +1,1 @@
+A simple console application for calculating an integral and entering the results into a database using the direct and reverse recursion method, created as part of homework for the discipline "Computational Mathematics"

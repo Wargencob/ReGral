@@ -1,0 +1,111 @@
+using MathNet.Numerics;
+using MathNet.Numerics.Integration;
+using System.Diagnostics;
+using ДЗ1.DB;
+using ДЗ1.Models;
+
+namespace ДЗ1
+{
+    class Program
+    {
+        #region Переменные 
+        const double e = Math.E;
+
+        static int S = 24;
+
+        static int nV1 = S + 1;
+
+        static double nV2 = 119.0;
+
+        static List<V1Model> Result_1 = new List<V1Model>();
+
+        static List<StandartModel> Result_2 = new List<StandartModel>();
+
+        static List<V2Model> Result_3 = new List<V2Model>();
+
+        static double Js = Math.Round(NewtonCotesTrapeziumRule.IntegrateAdaptive(x => Math.Pow(x, S) * Math.Pow(e, x - 1), 0.0, 1.0, 1e-7), 8);
+        #endregion
+
+        static double JnV1(double J)
+        {
+            if (J > 0 && nV1 != 104)
+            {
+                J = Math.Round(1 - nV1 * J, 8);
+                nV1++;
+                Result_1.Add(new V1Model
+                {
+                    result = J
+                });
+                return JnV1(Math.Round(J,8));
+            }
+            else
+            {
+                Console.WriteLine($"Время выполнения рекурсивного рассчёта v1: {sw.ElapsedMilliseconds}");
+                return J;
+            }
+        }
+
+        static void Standart(int start, int end)
+        {
+            double Jn;
+
+            for (int i = start; i < end; i++)
+            {
+                Jn = Math.Round(NewtonCotesTrapeziumRule.IntegrateAdaptive(x => Math.Pow(x, i) * Math.Pow(e, x - 1), 0.0, 1.0, 1e-7), 8);
+                Result_2.Add(new StandartModel
+                {
+                    result = Jn
+                });
+            }
+            Console.WriteLine($"Время выполнения стандартного рассчёта интегралла: {sw.ElapsedMilliseconds}");
+        }
+
+        static double JnV2(double J, double x)
+        {
+            if (J != Js && x != 0)
+            {
+                J = Math.Round((1.0 / x) * (1 - J), 8);
+                x--;
+                Result_3.Add(new V2Model
+                {
+                    result = J
+                });
+                return JnV2(J, x);
+            }
+            else 
+            {
+                Console.WriteLine($"Время выполнения рекурсивного рассчёта v1: {sw.ElapsedMilliseconds}");
+                return J;
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            using (var db = new MyDbContext())
+            {
+                JnV1(Js);
+
+                foreach (var x in Result_1)
+                    db.V1.Add(x);
+
+                Standart(S, 100 + S);
+
+                foreach (var x in Result_2)
+                    db.Standart.Add(x);
+               
+                JnV2(0, nV2);
+
+                Result_3.Reverse();
+
+                foreach (var x in Result_3)
+                {
+                    db.V2.Add(x);
+                }
+
+                db.SaveChanges();
+
+                Console.WriteLine(Js);
+            }
+        }
+    }
+}
